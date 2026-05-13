@@ -1,0 +1,224 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_apply:
+        description: "Digite APPLY para confirmar a criação dos recursos na AWS"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+jobs:
+  prepare:
+    name: Prepare shared variables
+    runs-on: ubuntu-latest
+
+    outputs:
+      github_user: ${{ steps.vars.outputs.github_user }}
+      app_bucket_name: ${{ steps.vars.outputs.app_bucket_name }}
+      adm_bucket_name: ${{ steps.vars.outputs.adm_bucket_name }}
+
+    steps:
+      - name: Build shared variables
+        id: vars
+        run: |
+          GITHUB_USER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+
+          echo "github_user=$GITHUB_USER" >> $GITHUB_OUTPUT
+          echo "app_bucket_name=cloudsec-${GITHUB_USER}-app" >> $GITHUB_OUTPUT
+          echo "adm_bucket_name=cloudsec-${GITHUB_USER}-adm" >> $GITHUB_OUTPUT
+
+          echo "GitHub user: $GITHUB_USER"
+          echo "App bucket: cloudsec-${GITHUB_USER}-app"
+          echo "Adm bucket: cloudsec-${GITHUB_USER}-adm"
+  apply:
+    name: Apply approved infrastructure
+    runs-on: ubuntu-latest
+    needs: prepare
+
+    if: ${{ github.event.inputs.confirm_apply == 'APPLY' }}
+
+    env:
+      TF_VAR_app_bucket_name: ${{ needs.prepare.outputs.app_bucket_name }}
+      TF_VAR_adm_bucket_name: ${{ needs.prepare.outputs.adm_bucket_name }}
+      TF_VAR_allowed_public_ip_cidr: ${{ vars.ALLOWED_PUBLIC_IP_CIDR }}
+      TF_VAR_github_repository: ${{ github.repository }}
+      TF_VAR_ansible_role_arn: ${{ vars.ARN_OIDC_ANSIBLE_ROLE }}
+      TF_VAR_prowler_role_arn: ${{ vars.ARN_OIDC_PROWLER_ROLE }}
+
+    defaults:
+      run:
+        working-directory: infra
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ARN_OIDC_TERRAFORM_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: Terraform init
+        run: 
+          terraform init -input=false -reconfigure -backend-config="bucket=${{ vars.TERRAFORM_BUCKET_NAME }}" -backend-config="key=cloudsec/terraform.tfstate" -backend-config="region=${{ vars.AWS_REGION }}" -backend-config="encrypt=true"
+
+      - name: Terraform fmt
+        run: terraform fmt -recursive
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: terraform plan -out=tfplan.binary
+
+      - name: Convert plan to JSON
+        run: terraform show -json tfplan.binary > tfplan.json
+
+      - name: Run Rego security policies before apply
+        run: |
+          opa eval \
+            --fail-defined \
+            --format pretty \
+            --data ../policy/terraform_security.rego \
+            --input tfplan.json \
+            'data.terraform.security.deny[_]'
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve tfplan.binary
+
+      - name: Get Terraform outputs
+        id: tf_outputs
+        working-directory: infra
+        run: |
+          #APP_BUCKET_NAME=$(terraform output -raw app_bucket_name)
+          #echo "app_bucket_name=$APP_BUCKET_NAME" >> $GITHUB_OUTPUT
+
+          VPC_ID=$(terraform output -raw vpc_id)
+          echo "vpc_id=$VPC_ID" >> $GITHUB_OUTPUT
+
+    outputs:
+      vpc_id: ${{ steps.tf_outputs.outputs.vpc_id }}
+      
+  ansible:
+    name: Configure EC2 with Ansible over SSM
+    runs-on: ubuntu-latest
+    needs:
+      - prepare 
+      - apply
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      APP_BUCKET_NAME: ${{ needs.prepare.outputs.app_bucket_name }}
+      ADM_BUCKET_NAME: ${{ needs.prepare.outputs.adm_bucket_name }}
+      VPC_ID: ${{ needs.apply.outputs.vpc_id }}
+      ALLOWED_PUBLIC_IP_CIDR: ${{ vars.ALLOWED_PUBLIC_IP_CIDR }}
+
+      ANSIBLE_TIMEOUT: "90"
+      ANSIBLE_HOST_KEY_CHECKING: "False"
+      PYTHONUNBUFFERED: "1"
+      ANSIBLE_SSH_RETRIES: "3"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ARN_OIDC_ANSIBLE_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Validate ADM bucket access
+        run: |
+          aws sts get-caller-identity
+          aws s3api head-bucket --bucket "$ADM_BUCKET_NAME"
+          aws s3api get-bucket-location --bucket "$ADM_BUCKET_NAME"
+
+      - name: Install Ansible and AWS dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --user ansible boto3 botocore
+          ansible-galaxy collection install amazon.aws
+
+      - name: Install AWS Session Manager Plugin
+        run: |
+          curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -L -o "session-manager-plugin.deb"
+          sudo dpkg -i session-manager-plugin.deb
+          session-manager-plugin --version
+
+      - name: Run Ansible over SSM
+        env:
+          TERM: xterm
+          ANSIBLE_FORCE_COLOR: "True"
+        run: |
+          ansible-playbook \
+            -i ansible/inventory.aws_ec2.yml \
+            ansible/playbook.yml -f 1
+            
+  prowler:
+    if: false
+    name: Run Prowler and upload report
+    runs-on: ubuntu-latest
+    needs:
+      - prepare 
+      - apply
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      ADM_BUCKET_NAME: ${{ needs.prepare.outputs.adm_bucket_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials with OIDC - Prowler
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ARN_OIDC_PROWLER_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Prowler
+        run: pipx install prowler
+
+      - name: Run Prowler AWS scan
+        continue-on-error: true
+        run: |
+          prowler aws \
+          --region "$AWS_REGION" \
+          --output-formats html \
+          --output-directory prowler-output
+
+      - name: Upload Prowler HTML report to private S3 bucket
+        run: |
+          echo "Bucket: $ADM_BUCKET_NAME"
+
+          REPORT_FILE=$(find prowler-output -name "*.html" | head -n 1)
+
+          aws s3 cp "$REPORT_FILE" \
+            "s3://$ADM_BUCKET_NAME/prowler/index.html" \
+            --content-type "text/html"
