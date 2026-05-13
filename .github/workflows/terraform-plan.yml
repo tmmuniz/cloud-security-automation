@@ -3,8 +3,8 @@ name: Terraform Plan + Rego Policy Check
 on:
   pull_request:
     branches: ["main"]
-  #push:
-  #  branches: ["main"]
+  push:
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -87,10 +87,16 @@ jobs:
         run: terraform fmt -recursive
 
       - name: Terraform init
-        run: terraform init -input=false -reconfigure
+        run: terraform init -input=false -reconfigure -backend-config="bucket=${{ vars.TERRAFORM_BUCKET_NAME }}" -backend-config="key=cloudsec/terraform.tfstate" -backend-config="region=${{ vars.AWS_REGION }}" -backend-config="encrypt=true"
 
       - name: Terraform validate
         run: terraform validate
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1
+        with:
+          working_directory: infra
+          soft_fail: false
 
       - name: Terraform plan
         run: terraform plan -out=tfplan.binary

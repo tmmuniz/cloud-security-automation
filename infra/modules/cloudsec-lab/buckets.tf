@@ -1,6 +1,6 @@
 # Bucket S3 privado onde o Prowler e Cloudtrail farao a escrita
 resource "aws_s3_bucket" "adm_reports" {
-  bucket = var.adm_bucket_name
+  bucket        = var.adm_bucket_name
   force_destroy = var.force_destroy_buckets
 
   tags = merge(local.common_tags, {

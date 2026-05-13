@@ -217,9 +217,9 @@ resource "aws_iam_policy" "ansible_ssm_controller" {
           "s3:DeleteObject"
         ]
         #Resource = "${aws_s3_bucket.adm_reports.arn}/ansible-ssm/*"
-          Resource = [
-            "${aws_s3_bucket.adm_reports.arn}/ansible-ssm/*",
-            "${aws_s3_bucket.adm_reports.arn}/i-*/*" ]
+        Resource = [
+          "${aws_s3_bucket.adm_reports.arn}/ansible-ssm/*",
+        "${aws_s3_bucket.adm_reports.arn}/i-*/*"]
       }
     ]
   })

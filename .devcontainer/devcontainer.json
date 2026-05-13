@@ -12,6 +12,7 @@
         "tsandall.opa",
         "ecmel.vscode-html-css",
         "redhat.ansible",
+        "redhat.vscode-yaml",
         "ritwickdey.LiveServer",
         "github.vscode-github-actions"
       ]

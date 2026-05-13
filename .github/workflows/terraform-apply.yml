@@ -82,7 +82,7 @@ jobs:
           terraform init -input=false -reconfigure -backend-config="bucket=${{ vars.TERRAFORM_BUCKET_NAME }}" -backend-config="key=cloudsec/terraform.tfstate" -backend-config="region=${{ vars.AWS_REGION }}" -backend-config="encrypt=true"
 
       - name: Terraform fmt
-        run: terraform fmt -recursive
+        run: terraform fmt -recursive -check
 
       - name: Terraform validate
         run: terraform validate
@@ -119,7 +119,7 @@ jobs:
       vpc_id: ${{ steps.tf_outputs.outputs.vpc_id }}
       
   ansible:
-    name: Configure EC2 with Ansible over SSM
+    name: Ansible configuration
     runs-on: ubuntu-latest
     needs:
       - prepare 
@@ -179,7 +179,7 @@ jobs:
             
   prowler:
     if: false
-    name: Run Prowler and upload report
+    name: Prowler Scan
     runs-on: ubuntu-latest
     needs:
       - prepare 

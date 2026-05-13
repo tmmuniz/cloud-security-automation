@@ -10,9 +10,9 @@ module "cloudsec_lab" {
   app_bucket_name        = var.app_bucket_name
   github_repository      = var.github_repository
   #enable_ssh_access      = var.enable_ssh_access
-  force_destroy_buckets  = var.force_destroy_buckets
+  force_destroy_buckets = var.force_destroy_buckets
   #ssh_public_key         = var.ssh_public_key
-  aws_region             = var.aws_region
-  ansible_role_arn       = var.ansible_role_arn
-  prowler_role_arn       = var.prowler_role_arn
+  aws_region       = var.aws_region
+  ansible_role_arn = var.ansible_role_arn
+  prowler_role_arn = var.prowler_role_arn
 }
