@@ -92,11 +92,13 @@ jobs:
       - name: Terraform validate
         run: terraform validate
 
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1
+      - name: Run Trivy (IaC scan)
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          working_directory: infra
-          soft_fail: false
+          scan-type: config
+          scan-ref: infra
+          format: table
+          exit-code: 1
 
       - name: Terraform plan
         run: terraform plan -out=tfplan.binary
