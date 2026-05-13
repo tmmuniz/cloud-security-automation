@@ -23,9 +23,41 @@ env:
   
 
 jobs:
+  prepare:
+    name: Prepare variables
+    runs-on: ubuntu-latest
+
+    outputs:
+      github_user: ${{ steps.vars.outputs.github_user }}
+      app_bucket_name: ${{ steps.vars.outputs.app_bucket_name }}
+      adm_bucket_name: ${{ steps.vars.outputs.adm_bucket_name }}
+
+    steps:
+      - name: Build shared variables
+        id: vars
+        run: |
+          GITHUB_USER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+
+          echo "github_user=$GITHUB_USER" >> $GITHUB_OUTPUT
+          echo "app_bucket_name=cloudsec-${GITHUB_USER}-app" >> $GITHUB_OUTPUT
+          echo "adm_bucket_name=cloudsec-${GITHUB_USER}-adm" >> $GITHUB_OUTPUT
+
+          echo "GitHub user: $GITHUB_USER"
+          echo "App bucket: cloudsec-${GITHUB_USER}-app"
+          echo "Adm bucket: cloudsec-${GITHUB_USER}-adm"
+
   plan:
     name: Validate Terraform and Rego policies
     runs-on: ubuntu-latest
+    needs: prepare
+
+    env:
+      TF_VAR_app_bucket_name: ${{ needs.prepare.outputs.app_bucket_name }}
+      TF_VAR_adm_bucket_name: ${{ needs.prepare.outputs.adm_bucket_name }}
+      TF_VAR_allowed_public_ip_cidr: ${{ vars.ALLOWED_PUBLIC_IP_CIDR }}
+      TF_VAR_github_repository: ${{ github.repository }}
+      TF_VAR_ansible_role_arn: ${{ vars.ARN_OIDC_ANSIBLE_ROLE }}
+      TF_VAR_prowler_role_arn: ${{ vars.ARN_OIDC_PROWLER_ROLE }}
 
     defaults:
       run:
