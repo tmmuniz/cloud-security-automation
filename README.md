@@ -12,7 +12,7 @@ This project showcases a **real-world secure cloud architecture** built with:
 - Infrastructure as Code (Terraform)
 - Policy as Code (OPA/Rego)
 - Configuration Management (Ansible)
-- Security Scanning (trivity and Prowler)
+- Security Scanning (Trivity and Prowler)
 - CI/CD pipelines (GitHub Actions)
 
 ---
@@ -77,7 +77,7 @@ To maximize Free Tier eligibility, the following decisions were made:
 ### Workflow Steps
 
 1. Terraform formatting and validation
-2. Security scanning with trivity
+2. Security scanning with Trivity
 3. Policy validation with OPA/Rego
 4. Terraform plan and apply
 5. Configuration management with Ansible (via SSM)
@@ -146,7 +146,6 @@ Additionally:
 
 - Implement centralized logging with CloudWatch
 - Add automated remediation (Lambda)
-- Integrate vulnerability scanning (Trivy)
 
 ---
 

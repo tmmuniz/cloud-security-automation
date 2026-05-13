@@ -39,7 +39,7 @@ jobs:
           echo "App bucket: cloudsec-${GITHUB_USER}-app"
           echo "Adm bucket: cloudsec-${GITHUB_USER}-adm"
   apply:
-    name: Apply approved infrastructure
+    name: Apply approved infra
     runs-on: ubuntu-latest
     needs: prepare
 
@@ -109,8 +109,6 @@ jobs:
         id: tf_outputs
         working-directory: infra
         run: |
-          #APP_BUCKET_NAME=$(terraform output -raw app_bucket_name)
-          #echo "app_bucket_name=$APP_BUCKET_NAME" >> $GITHUB_OUTPUT
 
           VPC_ID=$(terraform output -raw vpc_id)
           echo "vpc_id=$VPC_ID" >> $GITHUB_OUTPUT
@@ -178,7 +176,6 @@ jobs:
             ansible/playbook.yml -f 1
             
   prowler:
-    if: false
     name: Prowler Scan
     runs-on: ubuntu-latest
     needs:

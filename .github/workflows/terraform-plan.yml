@@ -1,4 +1,4 @@
-name: TF Plan + Rego and Trivity's scan
+name: TF Plan + Rego + Trivity
 
 on:
   pull_request:
@@ -24,7 +24,7 @@ env:
 
 jobs:
   prepare:
-    name: Prepare variables
+    name: Prepare shared variables
     runs-on: ubuntu-latest
 
     outputs:
