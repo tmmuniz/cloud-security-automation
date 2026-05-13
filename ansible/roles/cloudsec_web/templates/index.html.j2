@@ -1,0 +1,205 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Security Automation - @tmmuniz Portfolio</title>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f4f6f8;
+        color: #1f2937;
+      }
+
+      header {
+        background: #111827;
+        color: white;
+        padding: 40px 60px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 34px;
+      }
+
+      header p {
+        max-width: 900px;
+        font-size: 18px;
+        line-height: 1.6;
+        color: #d1d5db;
+      }
+
+      main {
+        padding: 40px 60px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .card h2 {
+        margin-top: 0;
+        color: #111827;
+        font-size: 20px;
+      }
+
+      .card ul {
+        padding-left: 20px;
+        line-height: 1.7;
+      }
+
+      .badge {
+        display: inline-block;
+        background: #e5e7eb;
+        color: #111827;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        margin: 4px;
+      }
+
+      .cta {
+        margin-top: 30px;
+        display: inline-block;
+        background: #111827;
+        color: white;
+        padding: 14px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      footer {
+        padding: 30px 60px;
+        color: #6b7280;
+        font-size: 14px;
+      }
+
+      code {
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <center><h1>Cloud Security Automation - Portfolio by @tmmuniz</h1>
+      <p>
+        <h3>AWS Free Tier + Terraform + Rego/OPA + Ansible + Prowler</h3>
+      </p>
+      <p>Fully automated through CI/CD pipelines, aligned with DevSecOps principles</p>
+      </center>
+    </header>
+
+    <main>
+
+      <section class="card" style="margin-top: 24px;">
+      <center>
+      <h2>Current Infrastructure</h2>
+          <table border="1" cellpadding="6" cellspacing="0">
+          <tr>
+            <td>Hostname (Instance ID)</td>
+            <td>
+              {{ os_hostname.stdout | default('N/A') }}
+              ({{ inventory_hostname }})
+            </td>
+          </tr>
+          <tr>
+            <td>Availability Zone (Region)</td>
+            <td>
+              {{ placement.availability_zone | default('N/A') }}
+              ({{ placement.availability_zone[:-1] if placement.availability_zone is defined else 'N/A' }})
+            </td>
+          </tr>
+          <tr>
+            <td>Private IP (VPC ID)</td>
+            <td>
+            {{ private_ip_address | default('N/A') }} 
+            ({{ vpc_id | default('N/A') }})</td>
+            </td>
+          </tr>
+          <tr>
+            <td>App & Adm Buckets</td>
+            <td>{{ app_bucket }} & {{ adm_bucket }}</td>
+          </tr>
+          <tr>
+            <td>Allowed Public IP</td>
+            <td>{{ allowed_public_ip_cidr | default('N/A') }}</td>
+          </tr>
+        </table>  
+      </center>
+      </section>
+
+      <br>
+      <section class="grid">
+        <div class="card">
+          <h2>Infrastructure as Code</h2>
+          <ul>
+            <li>Terraform provisions AWS resources.</li>
+            <li>Remote state is stored in an encrypted S3 backend.</li>
+            <li>Resources are tagged for governance and inventory.</li>
+            <li>EC2, ALB, IAM, S3, CloudTrail and Security Groups are managed as code.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Policy as Code</h2>
+          <ul>
+            <li>OPA/Rego validates Terraform plans before deployment.</li>
+            <li>Policies enforce security requirements before <code>terraform apply</code>.</li>
+            <li>Controls can block insecure infrastructure changes early in the pipeline.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Configuration Management</h2>
+          <ul>
+            <li>Ansible configures EC2 instances after provisioning.</li>
+            <li>Connection is performed through AWS SSM Session Manager.</li>
+            <li>No SSH key, passwords or inbound port 22 are required.</li>
+            <li>Nginx and application scripts are deployed automatically.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>CSPM and Security Scanning</h2>
+          <ul>
+            <li>tfsec performs static analysis on Terraform code.</li>
+            <li>Prowler runs AWS security posture checks.</li>
+            <li>Reports are stored in a private administrative S3 bucket.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Audit and Security Controls</h2>
+          <ul>
+            <li>CloudTrail records AWS management events under a dedicated S3 prefix.</li>
+            <li>S3 buckets are private and protected against public access.</li>
+            <li>IAM roles follow separation of duties and least privilege</li>
+            <li>HTTP access is restricted through the ALB security group.</li>
+          </ul>
+        </div>
+      </section>
+
+      <center><a class="cta" href="/app-data/index.html">View Application Bucket Data</a></center>
+    </main>
+
+    <footer>
+      This project was built for security automation, compliance evidence,
+      and cloud infrastructure governance.
+    </footer>
+  </body>
+</html>

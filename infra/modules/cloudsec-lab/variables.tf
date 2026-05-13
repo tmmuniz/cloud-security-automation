@@ -1,0 +1,86 @@
+variable "project_name" {
+  description = "Nome base usado na identificação dos recursos."
+  type        = string
+  default     = "cloudsec"
+}
+
+variable "environment" {
+  description = "Ambiente lógico do deploy."
+  type        = string
+  default     = "dev"
+}
+
+variable "instance_type" {
+  description = "Tipo da instância EC2 Free Tier elegível."
+  type        = string
+}
+
+variable "owner" {
+  description = "Responsável pelo ambiente"
+  type        = string
+  default     = "cloudsec-team"
+}
+
+variable "allowed_public_ip_cidr" {
+  description = "CIDR público autorizado a acessar o ALB. Use x.x.x.x/32 para liberar somente seu IP."
+  type        = string
+}
+
+variable "ec2_instance_count" {
+  description = "Quantidade de instâncias EC2 atrás do ALB. Duas instâncias demonstram alta disponibilidade, mas consomem horas do Free Tier de forma acumulada."
+  type        = number
+  default     = 2
+
+  validation {
+    condition     = var.ec2_instance_count >= 1 && var.ec2_instance_count <= 2
+    error_message = "Para manter o laboratório controlado, use 1 ou 2 instâncias."
+  }
+}
+
+variable "adm_bucket_name" {
+  description = "ADM bucket name"
+  type        = string
+}
+
+variable "app_bucket_name" {
+  description = "APP bucket name"
+  type        = string
+}
+
+variable "github_repository" {
+  description = "Repositório GitHub autorizado no OIDC. Exemplo: usuario/repositorio"
+  type        = string
+  default     = "tmmuniz/iac-compliance-cloudsec"
+}
+
+#variable "ssh_public_key" {
+#  description = "Chave pública SSH para acesso às instâncias"
+#  type        = string
+#}
+
+#variable "enable_ssh_access" {
+#  description = "Habilita acesso SSH às EC2 a partir do CIDR autorizado."
+#  type        = bool
+#  default     = false
+#}
+
+variable "force_destroy_buckets" {
+  description = "Permite destruir buckets mesmo com objetos."
+  type        = bool
+  default     = false
+}
+
+variable "aws_region" {
+  type    = string
+  default = "us-east-1"
+}
+
+variable "ansible_role_arn" {
+  description = "ARN da role OIDC usada pelo GitHub Actions para Ansible"
+  type        = string
+}
+
+variable "prowler_role_arn" {
+  description = "ARN da role OIDC usada pelo GitHub Actions para Ansible"
+  type        = string
+}

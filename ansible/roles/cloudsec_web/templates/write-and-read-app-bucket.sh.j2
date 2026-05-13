@@ -1,0 +1,93 @@
+#!/bin/bash
+set -euo pipefail
+
+APP_BUCKET="{{ app_bucket }}"
+OUTPUT_DIR="/usr/share/nginx/html/app-data"
+
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/instance-id)
+
+HOSTNAME=$(hostname)
+NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+OBJECT_KEY="ec2-writes/$INSTANCE_ID-output.txt"
+
+mkdir -p "$OUTPUT_DIR"
+
+cat > /tmp/ec2-app-write.txt <<EOT
+This content was written to the $APP_BUCKET bucket by instance $INSTANCE_ID at $NOW
+EOT
+
+aws s3 cp /tmp/ec2-app-write.txt "s3://$APP_BUCKET/$OBJECT_KEY"
+
+aws s3 ls "s3://$APP_BUCKET/ec2-writes/" > "$OUTPUT_DIR/objects.txt" || true
+
+cat > "$OUTPUT_DIR/index.html" <<EOT
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Bucket Data</title>
+
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f4f6f8;
+        color: #1f2937;
+        margin: 0;
+        padding: 40px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 24px;
+        max-width: 900px;
+        margin: auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      }
+
+      h1, h2 {
+        color: #111827;
+      }
+
+      pre {
+        background: #f3f4f6;
+        padding: 14px;
+        border-radius: 6px;
+        overflow-x: auto;
+      }
+
+      a {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <h1>Application Bucket Data</h1>
+
+      <p>
+        This page displays evidence that the EC2 instance can write to and read from
+        the private application S3 bucket using its IAM role.
+      </p>
+
+      <h2>Objects found in ec2-writes/</h2>
+      <pre>$(cat "$OUTPUT_DIR/objects.txt")</pre>
+
+      <h2>Latest content written</h2>
+      <pre>$(cat /tmp/ec2-app-write.txt)</pre>
+
+      <p><a href="/">Back to project overview</a></p>
+    </div>
+  </body>
+</html>
+EOT
+
+rm -f /tmp/ec2-app-write.txt
