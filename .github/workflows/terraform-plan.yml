@@ -1,4 +1,4 @@
-name: TF Plan + Rego + Trivity
+name: TF Plan + Rego + Trivy
 
 on:
   pull_request:
