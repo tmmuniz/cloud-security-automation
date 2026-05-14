@@ -42,7 +42,7 @@ jobs:
           terraform_version: 1.8.5
 
       - name: Terraform init
-        run: terraform init
+        run: terraform init -input=false -reconfigure -backend-config="bucket=${{ vars.TERRAFORM_BUCKET_NAME }}" -backend-config="key=cloudsec/terraform.tfstate" -backend-config="region=${{ vars.AWS_REGION }}" -backend-config="encrypt=true"
 
       - name: Terraform destroy
         run: terraform destroy -auto-approve
