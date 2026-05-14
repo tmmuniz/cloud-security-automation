@@ -145,9 +145,15 @@ The application exposes a web page displaying:
 - Environment features overview
 - S3 bucket interaction logs
 
+<img src="printscreen/html-page.png" alt="HTML Page" width="900">
+<img src="printscreen/bucket-html-page.png" alt="Bucket HTML Page" width="600">
+
 Additionally:
 
 - CloudTrail and Prowler data (securely accessible via AWS Console)
+
+<img src="printscreen/prowler.png" alt="Prowler Report" width="900">
+<img src="printscreen/bucket-aws.png" alt="Bucket AWS Page" width="600">
 
 ---
 
