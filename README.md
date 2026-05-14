@@ -1,23 +1,24 @@
 # 🔐 Cloud Security Automation Lab
 
-Fully automated Free Tier–eligible infrastructure leveraging infrastructure as code, policy-as-code, SAST, and CSPM, delivered through CI/CD pipelines and aligned with DevSecOps practices.
+Fully automated Free Tier–eligible infrastructure leveraging infrastructure as code, policy-as-code, SCA, and CSPM, delivered through CI/CD pipelines and aligned with DevSecOps practices.
 
 ---
 
 ## Overview
 
-This project showcases a **real-world secure cloud architecture** built with:
+This project covers the entire lifecycle of secure infrastructure delivery, including provisioning, configuration, policy enforcement, and continuous security assessment. The solutions used were:
 
 - Cloud Plataform (AWS)
 - Infrastructure as Code (Terraform)
 - Policy as Code (OPA/Rego)
 - Configuration Management (Ansible)
-- Security Scanning (Trivity and Prowler)
+- Software Composition Analysis (Trivy)
+- Cloud Security Posture Management (Prowler)
 - CI/CD pipelines (GitHub Actions)
 
 ---
 
-## Architecture
+## Cloud Architecture
 
 - EC2 instances behind an Application Load Balancer (ALB)
 - Private S3 bucket for application data
@@ -42,11 +43,12 @@ This project showcases a **real-world secure cloud architecture** built with:
 
 ## Security Controls
 
-- ALB receives traffic only from the allowed public IP
-- EC2 instances receive traffic only from the ALB
-- EC2 instances can read and write data to the application bucket
-- Administrative bucket is fully private and restricted to Prowler and CloudTrail
-- Security Groups allow inbound traffic only on port 80
+- Inbound traffic to the ALB is restricted to the allowed source public IP
+- EC2 instances receive HTTP traffic only from the ALB
+- EC2 instances can read and write only to the application S3 bucket
+- The administrative bucket is private and restricted to Prowler, CloudTrail, and Ansible SSM transport (separated S3 prefixes)
+- Security Groups allow only the required inbound traffic
+- IAM roles are separated by responsibility: Terraform, Ansible, Prowler, and EC2
 
 ---
 
@@ -76,13 +78,13 @@ To maximize Free Tier eligibility, the following decisions were made:
 
 ### Workflow Steps
 
-1. Terraform formatting and validation
-2. Security scanning with Trivity
-3. Policy validation with OPA/Rego
+1. **Terraform** formatting and validation
+2. Policy validation with **OPA/Rego**
+3. Security scanning with **Trivy**
 4. Terraform plan and apply
-5. Configuration management with Ansible (via SSM)
-6. Security assessment using Prowler
-7. Report storage in S3
+5. Configuration management with **Ansible** (via SSM)
+6. Security assessment using **Prowler**
+7. Report and Logs storage in S3
 
 ---
 
@@ -103,7 +105,14 @@ To maximize Free Tier eligibility, the following decisions were made:
 - AWS account
 - GitHub repository
 - S3 bucket for Terraform backend (encrypted)
-- OIDC configured for GitHub Actions
+- OIDC configured for GitHub Actions:
+
+| IAM Role (GitHub OIDC)  | Permission Policy |
+| ------------- | ------------- |
+| Terraform  | AdministratorAccess  |
+| Prowler  | SecurityAudit,ViewOnlyAccess  |
+| Ansible  | *Set by Terraform*  |
+
 
 ### Steps
 
@@ -117,14 +126,14 @@ To maximize Free Tier eligibility, the following decisions were made:
 
 2. Push to the main branch will execute PLAN workflow
 
-3. GitHub Actions will:
+3. APPLY workflow will:
    - Provision the infrastructure
    - Configure instances
    - Run security checks
 
 4. To clean all:
-   - Empty Buckets
-   - Run Terraform Destroy Workflow 
+   - Empty the Buckets (-app and -adm)
+   - Run Terraform DESTROY Workflow 
 
 ---
 
