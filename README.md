@@ -54,10 +54,22 @@ This project covers the entire lifecycle of secure infrastructure delivery, incl
 
 ## Policy Controls
 
-- Blocks Security Groups open to the internet (0.0.0.0/0)
-- Prevents public S3 buckets and public ACLs
-- Enforces S3 bucket encryption
-- Enforces tagging on S3 buckets and EC2 instances
+## 🔐 Policy-as-Code Controls (OPA/Rego)
+
+The following policies enforce security and governance controls aligned with industry standards such as CIS AWS Foundations Benchmark, NIST, and ISO 27001.
+
+| Control | Description | Framework Alignment |
+|--------|------------|-------------------|
+| SSH Access Restriction | Blocks Security Groups that allow SSH (port 22) from the internet (0.0.0.0/0) | CIS AWS 4.1, NIST AC-4, ISO 27001 A.13 |
+| S3 Public Access Block | Ensures all public access settings (ACLs and policies) are disabled for S3 buckets | CIS AWS 2.x, NIST AC-3, ISO 27001 A.9 |
+| S3 Encryption | Requires server-side encryption to be enabled on all S3 buckets | CIS AWS 2.3, NIST SC-12, ISO 27001 A.10 |
+| Resource Tagging | Enforces mandatory tags (Environment, Project, Owner) for resource governance and traceability | NIST CM-8, ISO 27001 A.8 |
+| EC2 Root Volume Encryption | Ensures EC2 root volumes are encrypted | CIS AWS 4.2, NIST SC-28, ISO 27001 A.10 |
+| EC2 Volume Size Control | Limits EC2 root volume size to align with Free Tier constraints and cost governance | FinOps, NIST CM-7 |
+| EC2 Instance Type Restriction | Restricts EC2 instances to Free Tier eligible types (t2.micro, t3.micro) | FinOps |
+| HTTP Exposure Restriction | Prevents Security Groups from exposing HTTP (port 80) to the entire internet | CIS AWS 4.1, NIST AC-4 |
+| IAM PassRole Restriction | Prevents IAM policies from allowing iam:PassRole with wildcard resources | CIS AWS 1.22, NIST AC-6, ISO 27001 A.9 |
+| CloudTrail Enabled | Ensures CloudTrail logging is enabled for auditing and traceability | CIS AWS 3.1, NIST AU-2, ISO 27001 A.12 |
 
 ---
 
@@ -88,7 +100,7 @@ To maximize Free Tier eligibility, the following decisions were made:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 .<br>
 ├── infra/ # Terraform code<br>
 ├── ansible/ # Ansible playbooks and roles<br>
