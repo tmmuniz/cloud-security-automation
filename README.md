@@ -180,8 +180,8 @@ Additionally:
 
 **Taynan Mina Muniz**
 
-- Information Security Manager | DevSecOps | Terraform | AWS | GRC | ISO
-- LinkedIn: (https://www.linkedin.com/in/taynan-mina-muniz-458a33102/)
+- Information Security Specialist | Cloud Security & GRC | Terraform, AWS | ISO27001, LGPD
+- LinkedIn: (https://www.linkedin.com/in/tmmuniz)
 - GitHub: https://github.com/tmmuniz
 
 ---
