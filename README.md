@@ -18,6 +18,16 @@ This project covers the entire lifecycle of secure infrastructure delivery, incl
 
 ---
 
+## Security Practices Implemented
+
+- Infrastructure lifecycle fully automated and auditable
+- Elimination of long-lived credentials or keys
+- Least privilege and Segregation of Duties
+- Shift-left security and Continuous validation approaches
+- Centralized logging and traceability of actions
+
+---
+
 ## Cloud Architecture
 
 - EC2 instances behind an Application Load Balancer (ALB)
@@ -30,17 +40,6 @@ This project covers the entire lifecycle of secure infrastructure delivery, incl
 
 ---
 
-## Security Practices Implemented
-
-- No SSH access (SSM Session Manager only)
-- OIDC integration between GitHub Actions and AWS
-- IMDSv2 enforced on EC2
-- IAM least privilege applied to all roles
-- Architectural Separation (Different Buckets and Roles)
-- Security scanning and infrastructure validation integrated into CI/CD
-
----
-
 ## Security Controls
 
 - Inbound traffic to the ALB is restricted to the allowed source public IP
@@ -49,6 +48,7 @@ This project covers the entire lifecycle of secure infrastructure delivery, incl
 - The administrative bucket is private and restricted to Prowler, CloudTrail, and Ansible SSM transport (separated S3 prefixes)
 - Security Groups allow only the required inbound traffic
 - IAM roles are separated by responsibility: Terraform, Ansible, Prowler, and EC2
+- IMDSv2 enforced on EC2
 
 ---
 
