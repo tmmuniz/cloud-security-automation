@@ -18,12 +18,12 @@ This project covers the entire lifecycle of secure infrastructure delivery, incl
 
 ---
 
-## Security Practices Implemented
+## Main Security Practices Implemented
 
 - Infrastructure lifecycle fully automated and auditable
+- Shift-left security/governance and continuous validation approaches
 - Elimination of long-lived credentials or keys
-- Least privilege and Segregation of Duties
-- Shift-left security and Continuous validation approaches
+- Least privilege, least exposure and Segregation of Duties
 - Centralized logging and traceability of actions
 
 ---
